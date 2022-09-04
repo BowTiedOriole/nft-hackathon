@@ -10,13 +10,13 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 ///@notice This is a simple NFT contract with phased release. Prolly shouldn't use
 contract OrioleNFT is ERC721, Ownable {
     event Withdrawal(address indexed withdrawer, uint256 amount);
+    event Raffle(address indexed winner, uint256 tokenId);
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
     uint256 public mintPrice = 1 ether;
     uint256 public rafflePrice = .1 ether;
-
     uint256 public allowListStartTime;
     uint256 public publicSaleStartTime;
 
@@ -48,10 +48,10 @@ contract OrioleNFT is ERC721, Ownable {
     }
 
     ///@notice Owner can mint NFT anytime, free of charge
-    function adminMint() public onlyOwner {
+    function adminMint(address _address) public onlyOwner {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
-        _safeMint(msg.sender, tokenId);
+        _safeMint(_address, tokenId);
     }
 
     ///@notice During allowList phase, addresses on allowList can mint the NFT
@@ -104,12 +104,25 @@ contract OrioleNFT is ERC721, Ownable {
     }
 
     ///@notice Executes the raffle
-    function executeRaffle() external onlyOwner {}
+    function executeRaffle() external onlyOwner {
+        address winner = raffleEntries[getRandom(raffleEntries.length)];
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(winner, tokenId);
+        emit Raffle(winner, tokenId);
+    }
 
     ///@notice Returns true if provided address is on allowList
     ///@param _address Address of user to check
     function addressAllowed(address _address) external view returns (bool) {
         return allowList[_address];
+    }
+
+    ///@notice Returns "random" element of array
+    ///@param _length Length of the array
+    function getRandom(uint256 _length) private view returns (uint256) {
+        // I know this isn't close to random. If time will set up with Oracle
+        return block.timestamp % _length;
     }
 
     /// @notice Returns the current phase

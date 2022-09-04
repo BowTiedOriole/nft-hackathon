@@ -21,7 +21,7 @@ async function deployOrioleContracts() {
 
     // Grant OrioleStake MINTER_ROLE
     await hardhatOrioleToken.connect(owner).grantRole(hardhatOrioleToken.MINTER_ROLE(), hardhatOrioleStake.address)
-    return { owner, addr1, hardhatOrioleToken, hardhatOrioleStake }
+    return { owner, addr1, hardhatOrioleNFT, hardhatOrioleToken, hardhatOrioleStake }
 }
 
 module.exports = { deployOrioleContracts };

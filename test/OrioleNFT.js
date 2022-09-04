@@ -6,7 +6,7 @@ const { ethers } = require("hardhat");
 describe("OrioleNFT Contract", function () {
     async function deployNFTContractFixture() {
 
-        const [owner, addr1, addr2] = await ethers.getSigners();
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
         const NFT = await ethers.getContractFactory("OrioleNFT");
         const nftName = 'OrioleNFT';
@@ -18,7 +18,7 @@ describe("OrioleNFT Contract", function () {
 
         const hardhatNFT = await NFT.deploy(nftName, nftSymbol, allowListStartTime, publicSaleStartTime);
 
-        return { hardhatNFT, owner, addr1, addr2, allowListStartTime, publicSaleStartTime };
+        return { hardhatNFT, owner, addr1, addr2, addr3, allowListStartTime, publicSaleStartTime };
 
     }
 
@@ -72,7 +72,7 @@ describe("OrioleNFT Contract", function () {
         it("Owner can call adminMint and receive one NFT", async function () {
             const { hardhatNFT, owner } = await loadFixture(deployNFTContractFixture);
 
-            await hardhatNFT.connect(owner).adminMint();
+            await hardhatNFT.connect(owner).adminMint(owner.address);
             expect(await hardhatNFT.balanceOf(owner.address)).to.equal(1);
             expect(await hardhatNFT.ownerOf(0)).to.equal(owner.address);
         });
@@ -80,7 +80,7 @@ describe("OrioleNFT Contract", function () {
         it("Non-owner can't call adminMint", async function () {
             const { hardhatNFT, addr1 } = await loadFixture(deployNFTContractFixture);
 
-            await expect(hardhatNFT.connect(addr1).adminMint()).to.be.reverted;
+            await expect(hardhatNFT.connect(addr1).adminMint(addr1.address)).to.be.reverted;
         })
 
         it("Address on allowList can mint once phase is allowList", async function () {
@@ -103,6 +103,29 @@ describe("OrioleNFT Contract", function () {
             await hardhatNFT.connect(addr2).publicSaleMint({ value: ethers.utils.parseEther("1") });
             expect(await hardhatNFT.balanceOf(addr2.address)).to.equal(1);
         });
+    });
+
+    describe("Raffle", function () {
+
+        it("Address can enter into raffle. Will win if only entry", async function () {
+            const { hardhatNFT, owner, addr1 } = await loadFixture(deployNFTContractFixture);
+
+            await hardhatNFT.connect(addr1).enterRaffle(addr1.address, { value: ethers.utils.parseEther(".1") });
+            await hardhatNFT.connect(owner).executeRaffle();
+
+            expect(await hardhatNFT.balanceOf(addr1.address)).to.equal(1);
+        })
+
+        it("Emits event upon raffle execution", async function () {
+            const { hardhatNFT, owner, addr1, addr2, addr3 } = await loadFixture(deployNFTContractFixture);
+
+            await hardhatNFT.connect(addr1).enterRaffle(addr1.address, { value: ethers.utils.parseEther(".1") });
+            await hardhatNFT.connect(addr2).enterRaffle(addr2.address, { value: ethers.utils.parseEther(".1") });
+            await hardhatNFT.connect(addr3).enterRaffle(addr3.address, { value: ethers.utils.parseEther(".1") });
+
+            await expect(await hardhatNFT.connect(owner).executeRaffle()).to.emit(hardhatNFT, "Raffle");
+            expect(await hardhatNFT.ownerOf(0)).to.not.be.null;
+        })
     });
 
 });
