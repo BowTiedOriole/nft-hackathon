@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 ///@title OrioleNFT
 ///@author BowTiedOriole
-///@notice This is a simple NFT contract with phased release. Prolly shouldn't use
+///@notice This is a simple NFT contract with a raffle and a phased release
 contract OrioleNFT is ERC721, Ownable {
     event Withdrawal(address indexed withdrawer, uint256 amount);
     event Raffle(address indexed winner, uint256 tokenId);
@@ -121,7 +121,7 @@ contract OrioleNFT is ERC721, Ownable {
     ///@notice Returns "random" element of array
     ///@param _length Length of the array
     function getRandom(uint256 _length) private view returns (uint256) {
-        // I know this isn't close to random. If time will set up with Oracle
+        // I know this isn't truly random. But executeRaffle is onlyOwner so prolly ok
         return block.timestamp % _length;
     }
 

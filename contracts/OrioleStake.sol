@@ -11,13 +11,17 @@ interface IRewardToken is IERC20 {
     function mint(address to, uint256 amount) external;
 }
 
+///@title OrioleStake
+///@author BowTiedOriole
+///@notice This is a simple NFT staking contract that rewards OrioleTokens. Earn one token per day for each NFT you stake
 contract OrioleStake is ERC721Holder, Ownable {
     using SafeMath for uint256;
 
     IRewardToken public rewardsToken;
     IERC721 public nft;
 
-    uint256 constant stakingTime = 180;
+    // One token a day
+    uint256 constant stakingTime = 60 * 60 * 24;
 
     // User Staking Information
     mapping(address => Staker) public stakers;
@@ -72,21 +76,20 @@ contract OrioleStake is ERC721Holder, Ownable {
     function updateRewards() external {
         Staker storage staker = stakers[msg.sender];
 
-        uint256 reward;
+        uint reward;
         for (uint256 i = 0; i < staker.stakedTokens; i++) {
             uint256 time = staker.tokenStakingTime[i];
             if (block.timestamp > time) {
-                reward = reward.add(
-                    (block.timestamp).sub(time).div(stakingTime)
-                );
-                uint256 remainder = (block.timestamp).sub(time).mod(
-                    stakingTime
-                );
-                staker.tokenStakingTime[i] = block.timestamp.sub(remainder);
+                reward = (block.timestamp).sub(time).div(stakingTime);
+                if (reward > 0) {
+                    uint256 remainder = (block.timestamp).sub(time).mod(
+                        stakingTime
+                    );
+                    staker.tokenStakingTime[i] = block.timestamp.sub(remainder);
+                    staker.balance += reward;
+                }
             }
         }
-
-        staker.balance += reward;
     }
 
     ///@notice Function to claim your rewards
@@ -98,7 +101,7 @@ contract OrioleStake is ERC721Holder, Ownable {
         stakers[user].rewardsReleased += balance;
         stakers[user].balance = 0;
 
-        rewardsToken.mint(user, balance);
+        rewardsToken.mint(user, balance * 10**18);
     }
 
     ///@notice Function to get value of currently claimable rewards
