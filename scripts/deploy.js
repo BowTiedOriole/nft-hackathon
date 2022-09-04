@@ -1,5 +1,4 @@
 const { ethers } = require("hardhat");
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -14,7 +13,7 @@ async function main() {
 
     const nftName = 'OrioleNFT';
     const nftSymbol = 'ONFT';
-    const currentTime = await time.latest();
+    const currentTime = Date.now();
     const ONE_DAY_IN_SECONDS = 24 * 60 * 60;
     const allowListStartTime = currentTime + ONE_DAY_IN_SECONDS;
     const publicSaleStartTime = allowListStartTime + ONE_DAY_IN_SECONDS;
