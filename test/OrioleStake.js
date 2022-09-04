@@ -37,5 +37,24 @@ describe("OrioleStake Contract", function () {
 
             expect(await hardhatOrioleToken.balanceOf(addr1.address)).to.equal(1);
         });
+
+        it("Two stakes for 180 seconds yields two tokens", async function () {
+            const { owner, addr1, hardhatOrioleNFT, hardhatOrioleStake, hardhatOrioleToken } = await loadFixture(deployOrioleContracts);
+
+            await hardhatOrioleNFT.connect(owner).adminMint(addr1.address);
+            await hardhatOrioleNFT.connect(owner).adminMint(addr1.address);
+            await hardhatOrioleNFT.connect(addr1).approve(hardhatOrioleStake.address, 0);
+            await hardhatOrioleNFT.connect(addr1).approve(hardhatOrioleStake.address, 1);
+            await hardhatOrioleStake.connect(addr1).stake(0);
+            await hardhatOrioleStake.connect(addr1).stake(1);
+            await time.increase(180);
+
+            await hardhatOrioleStake.connect(addr1).updateRewards();
+            expect(await hardhatOrioleStake.getBalance(addr1.address)).to.equal(2);
+
+            await hardhatOrioleStake.connect(addr1).claimRewards();
+
+            expect(await hardhatOrioleToken.balanceOf(addr1.address)).to.equal(2);
+        });
     });
 });

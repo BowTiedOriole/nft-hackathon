@@ -19,6 +19,7 @@ contract OrioleStake is ERC721Holder, Ownable {
 
     uint256 constant stakingTime = 180;
 
+    // User Staking Information
     mapping(address => Staker) public stakers;
     struct Staker {
         uint256 stakedTokens;
@@ -26,7 +27,6 @@ contract OrioleStake is ERC721Holder, Ownable {
         uint256 balance;
         uint256 rewardsReleased;
     }
-
     mapping(uint => address) tokenOwner;
 
     constructor(IERC721 _nft, IRewardToken _rewardsToken) {
@@ -34,6 +34,8 @@ contract OrioleStake is ERC721Holder, Ownable {
         rewardsToken = _rewardsToken;
     }
 
+    ///@notice Publicly callable stake function
+    ///@param _tokenId Id of NFT to stake
     function stake(uint _tokenId) external {
         _stake(msg.sender, _tokenId);
     }
@@ -49,6 +51,8 @@ contract OrioleStake is ERC721Holder, Ownable {
         staker.stakedTokens++;
     }
 
+    ///@notice Publicly callable unstake function
+    ///@param _tokenId Id of NFT to unstake
     function unstake(uint _tokenId) external {
         _unstake(msg.sender, _tokenId);
     }
@@ -64,6 +68,7 @@ contract OrioleStake is ERC721Holder, Ownable {
         staker.stakedTokens--;
     }
 
+    ///@notice Function to calculate and update your rewards
     function updateRewards() external {
         Staker storage staker = stakers[msg.sender];
 
@@ -84,6 +89,7 @@ contract OrioleStake is ERC721Holder, Ownable {
         staker.balance += reward;
     }
 
+    ///@notice Function to claim your rewards
     function claimRewards() external {
         address user = msg.sender;
         uint balance = stakers[user].balance;
@@ -95,6 +101,8 @@ contract OrioleStake is ERC721Holder, Ownable {
         rewardsToken.mint(user, balance);
     }
 
+    ///@notice Function to get value of currently claimable rewards
+    ///@param _address Address of user to check claimable rewards
     function getBalance(address _address) external view returns (uint) {
         return stakers[_address].balance;
     }
